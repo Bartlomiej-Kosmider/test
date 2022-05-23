@@ -1,0 +1,51 @@
+name: Build and Publish
+
+on:
+  # This workflow is triggered when a commit is pushed to `master`. This is
+  # typically when a PR is merged, since no one is pushing commits directly to master
+  push:
+    branches:
+      - master
+  # This workflow is also triggered when a PR is opened, updated, or a label is applied
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+jobs:
+  generate_version:
+    name: Generate version
+    runs-on: ubuntu-latest
+    outputs:
+      library_base_version: ${{ steps.fetch_and_generate.outputs.library_base_version }}
+    env:
+      GITHUB_RUN_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v2
+        with: # Check out the branch from our PR
+          ref: ${{ github.head_ref }}
+      - name: Fetch and generate
+        id: fetch_and_generate
+        shell: bash
+        run: |
+          echo "::set-output name=library_base_version::1337"
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    if: "github.ref == 'refs/heads/master'"
+    needs:
+      - generate_version
+    steps:
+      - "env":
+          "GITHUB_TOKEN": "${{ github.token }}"
+          "LIBRARY_BASE_VERSION": ${{ needs.generate_version.outputs.library_base_version }}
+        "id": "create_release"
+        "name": "Create release"
+        "uses": "actions/create-release@v1.1.1"
+        "with":
+          "body": |
+            This release includes generated configuration artifacts that are dependent on a successful Docker build for both Java 8 and Java 17.
+            ## Commit message:
+            ${{ github.event.push.commits[0].message }}
+
+          "commitish": "${{ github.sha }}"
+          "release_name": "${{ env.LIBRARY_BASE_VERSION }}"
+          "tag_name": "${{ env.LIBRARY_BASE_VERSION }}"
