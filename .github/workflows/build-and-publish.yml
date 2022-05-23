@@ -26,7 +26,7 @@ jobs:
         id: fetch_and_generate
         shell: bash
         run: |
-          echo "::set-output name=library_base_version::1337"
+          echo "::set-output name=library_base_version::1338"
   create_release:
     name: Create release
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
           "body": |
             This release includes generated configuration artifacts that are dependent on a successful Docker build for both Java 8 and Java 17.
             ## Commit message:
-            ${{ github.event.push.commits[0].message }}
+            ${{ github.event.push.commits.message }}
 
           "commitish": "${{ github.sha }}"
           "release_name": "${{ env.LIBRARY_BASE_VERSION }}"
