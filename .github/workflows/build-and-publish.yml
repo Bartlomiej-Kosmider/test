@@ -26,18 +26,7 @@ jobs:
         id: fetch_and_generate
         shell: bash
         run: |
-          GRADLE_VERSION=$(grep -o "^version=.*" gradle.properties | grep -Eo "[0-9]+\.[0-9]+")
-          BRANCH_NAME=$(echo "${GITHUB_HEAD_REF:-$GITHUB_REF}" | sed -e 's/refs\/heads\///')
-          SHORT_SHA=$(git rev-parse HEAD | head -c 10)
-
-          if [ "$BRANCH_NAME" != "master" ]; then
-            SANITIZED_BRANCH="$(echo $BRANCH_NAME | sed -e 's/\//_/g')_"
-          else
-            SANITIZED_BRANCH=""
-          fi
-
-          VERSION=$GRADLE_VERSION.$GITHUB_RUN_NUMBER.$SANITIZED_BRANCH$SHORT_SHA
-          echo "::set-output name=library_base_version::$VERSION"
+          echo "::set-output name=library_base_version::1337"
   create_release:
     name: Create release
     runs-on: ubuntu-latest
@@ -48,8 +37,6 @@ jobs:
       - "env":
           "GITHUB_TOKEN": "${{ github.token }}"
           "LIBRARY_BASE_VERSION": ${{ needs.generate_version.outputs.library_base_version }}
-          "JAVA8_VERSION": ${{ needs.build_java_8.outputs.version }}
-          "JAVA17_VERSION": ${{ needs.build_java_17.outputs.version }}
         "id": "create_release"
         "name": "Create release"
         "uses": "actions/create-release@v1.1.1"
