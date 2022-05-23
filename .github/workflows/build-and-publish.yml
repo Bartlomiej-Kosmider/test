@@ -13,13 +13,13 @@ on:
 jobs:
   generate_version:
     name: Generate version
-    runs-on: [self-hosted,zendesk-stable]
+    runs-on: [self-hosted]
     outputs:
       library_base_version: ${{ steps.fetch_and_generate.outputs.library_base_version }}
     env:
       GITHUB_RUN_NUMBER: ${{ github.run_number }}
     steps:
-      - uses: zendesk/checkout@v2
+      - uses: actions/checkout@v2
         with: # Check out the branch from our PR
           ref: ${{ github.head_ref }}
       - name: Fetch and generate
@@ -40,8 +40,8 @@ jobs:
           echo "::set-output name=library_base_version::$VERSION"
   create_release:
     name: Create release
-    runs-on: [self-hosted,zendesk-stable]
-#    if: (github.event.push != null)
+    runs-on: [self-hosted]
+    if: "github.ref == 'refs/heads/master'"
     needs:
       - generate_version
     steps:
@@ -52,11 +52,12 @@ jobs:
           "JAVA17_VERSION": ${{ needs.build_java_17.outputs.version }}
         "id": "create_release"
         "name": "Create release"
-        "uses": "zendesk/create-release@v1.1.1"
+        "uses": "actions/create-release@v1.1.1"
         "with":
           "body": |
             This release includes generated configuration artifacts that are dependent on a successful Docker build for both Java 8 and Java 17.
-
+            ## Commit message:
+            ${{ github.event.push.commits[0].message }}
 
           "commitish": "${{ github.sha }}"
           "release_name": "${{ env.LIBRARY_BASE_VERSION }}"
